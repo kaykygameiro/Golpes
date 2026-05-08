@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    font-size: 18px; /* Fonte base maior para idosos */
+    @apply antialiased text-slate-900 bg-slate-50;
+  }
+}
