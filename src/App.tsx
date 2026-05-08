@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { motion } from 'motion/react';
 import { useAppStore } from './store/useAppStore';
 import { ScenarioView } from './components/simulation/ScenarioView';
 import { ProgressDashboard } from './components/dashboard/ProgressDashboard';
@@ -10,23 +11,39 @@ export default function App() {
 
   if (currentView === 'home') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 text-slate-900">
-        <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-md w-full text-center border-8 border-blue-50 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-32 bg-blue-600 rounded-b-[50px] z-0"></div>
-          
-          <div className="relative z-10 bg-white p-6 rounded-full inline-block shadow-lg border-4 border-blue-100 mx-auto mb-8 mt-4">
-            <Shield className="w-16 h-16 text-blue-600" />
+      <div className="min-h-screen bg-gradient-to-b from-blue-600 to-blue-800 flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-2xl">
+          <div className="text-center">
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="inline-block mb-8"
+            >
+              <Shield className="w-24 h-24 text-white drop-shadow-lg" />
+            </motion.div>
+
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 text-white tracking-tight drop-shadow-lg">
+              Antigolpe: Sua Defesa Digital
+            </h1>
+
+            <p className="text-xl md:text-2xl mb-12 text-blue-100 leading-relaxed font-medium max-w-lg mx-auto">
+              Treine seu olho vivo e aprenda a se proteger de golpes no celular sem correr riscos.
+            </p>
+
+            <div className="mb-8">
+              <AgeFriendlyButton 
+                onClick={startGame} 
+                variant="primary"
+                className="shadow-lg hover:shadow-2xl transition-shadow"
+              >
+                Começar Treinamento
+              </AgeFriendlyButton>
+            </div>
+
+            <p className="text-sm md:text-base text-blue-200 font-medium">
+              Junte-se a centenas de idosos que já aprenderam a se proteger nas Naves do Conhecimento
+            </p>
           </div>
-          
-          <h1 className="text-4xl font-extrabold mb-6 text-slate-800 tracking-tight">Antigolpe</h1>
-          
-          <p className="text-2xl mb-12 text-slate-600 leading-relaxed font-medium">
-            Treine seu olho vivo e aprenda a se proteger de golpes no celular sem correr riscos.
-          </p>
-          
-          <AgeFriendlyButton onClick={startGame} variant="primary">
-            Começar Treinamento
-          </AgeFriendlyButton>
         </div>
       </div>
     );
