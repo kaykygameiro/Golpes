@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'motion/react';
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'warning';
@@ -18,13 +17,8 @@ export function AgeFriendlyButton({ variant = 'primary', children, className = '
   };
 
   return (
-    <motion.button 
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className={`${baseClasses} ${variants[variant]} ${className}`}
-      {...props}
-    >
+    <button className={`${baseClasses} ${variants[variant]} ${className}`} {...props}>
       {children}
-    </motion.button>
+    </button>
   );
 }

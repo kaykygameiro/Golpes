@@ -1,174 +1,228 @@
-import React, { useEffect, useState } from 'react';
-import { SuspiciousHighlighter } from './SuspiciousHighlighter';
-import { PostScamAction } from './PostScamAction';
-import { Volume2, VolumeX, Shield, RotateCcw, Megaphone } from 'lucide-react';
-import { useSimulation } from '../../hooks/useSimulation';
-import { LessonModal } from './LessonModal';
+import React, { useMemo, useState } from 'react';
+import { useAppStore } from '../../store/useAppStore';
+import { MODULES } from '../../data/scenarios';
 import { AgeFriendlyButton } from '../ui/AgeFriendlyButton';
-import { SCENARIOS } from '../../data/scenarios';
-import { motion, AnimatePresence } from 'motion/react';
+
+function ShieldCheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  );
+}
+
+function ShieldAlertIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z" />
+      <path d="M12 8v5" />
+      <path d="M12 16h.01" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14" />
+      <path d="M13 6l6 6-6 6" />
+    </svg>
+  );
+}
 
 export function ScenarioView() {
-  const {
-    scenario,
-    score,
-    currentView,
-    currentScenarioIndex,
-    showFeedbackModal,
-    localChoice,
-    audioEnabled,
-    hasSupport,
-    isSpeaking,
-    handleOptionClick,
-    handleNextScreen,
-    toggleAudio,
-    replayCurrentAudio,
-  } = useSimulation();
+  const { currentModuleId, currentScenarioIndex, answerScenario, goToDashboard, selectScenario } = useAppStore();
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [hasAnswered, setHasAnswered] = useState(false);
+  const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
 
-  const [isModalMinimized, setIsModalMinimized] = useState(false);
+  const currentModule = useMemo(() => MODULES.find((m) => m.id === currentModuleId) ?? null, [currentModuleId]);
+  const scenario = currentModule?.scenarios[currentScenarioIndex] ?? null;
 
-  useEffect(() => {
-    if (audioEnabled && scenario && !showFeedbackModal && currentView === 'simulation') {
-      replayCurrentAudio();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenario?.id, currentView]);
-
-  // Reset minimized state when starting a new scenario or when modal is hidden
-  useEffect(() => {
-    if (!showFeedbackModal) {
-      setIsModalMinimized(false);
-    }
-  }, [showFeedbackModal]);
-
-  if (!scenario) return null;
-
-  if (currentView === 'post-scam') {
+  if (!currentModule || !scenario) {
     return (
-      <div className="max-w-xl mx-auto min-h-screen bg-slate-50 p-4">
-        <PostScamAction />
+      <div className="p-6 text-center">
+        <p className="text-xl font-bold text-slate-800">Cenário não encontrado.</p>
+        <AgeFriendlyButton onClick={goToDashboard} variant="primary" className="mt-4">
+          Voltar ao Dashboard
+        </AgeFriendlyButton>
       </div>
     );
   }
 
+  const handleOptionClick = (optionId: string, isScamAction: boolean) => {
+    if (hasAnswered) return;
+    setSelectedOption(optionId);
+    setHasAnswered(true);
+    answerScenario(scenario.id, !isScamAction);
+  };
+
+  const handleNext = () => {
+    const nextIndex = currentScenarioIndex + 1;
+    if (nextIndex < currentModule.scenarios.length) {
+      setSelectedOption(null);
+      setHasAnswered(false);
+      setActiveHighlight(null);
+      selectScenario(currentModule.id, nextIndex);
+    } else {
+      goToDashboard();
+    }
+  };
+
+  const chosenOption = scenario.options.find((o) => o.id === selectedOption) ?? null;
+
   return (
-    <div className="max-w-xl mx-auto min-h-screen bg-slate-50 flex flex-col relative shadow-2xl overflow-hidden">
-      {/* Header */}
-      <header className="bg-blue-900 text-white p-6 rounded-b-3xl shadow-lg relative z-10">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-2">
-            <Shield className="w-8 h-8" />
-            <span className="font-bold text-2xl">Pontos: {score}</span>
+    <div className="min-h-screen bg-slate-100 p-4 md:p-6 pb-32 flex flex-col items-center">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-md overflow-hidden border border-slate-200">
+        <div className="bg-blue-600 p-4 text-white flex justify-between items-center gap-4">
+          <span className="text-lg font-bold tracking-wide uppercase truncate" title={currentModule.title}>
+            {currentModule.title}
+          </span>
+          <span className="text-base font-medium whitespace-nowrap">
+            Questão {currentScenarioIndex + 1} de {currentModule.scenarios.length}
+          </span>
+        </div>
+
+        <div className="p-4 md:p-6">
+          <h2 className="text-2xl font-extrabold text-slate-800 mb-4">{scenario.title}</h2>
+          <p className="text-lg text-slate-600 font-medium mb-6 bg-blue-50 p-4 rounded-xl border-l-4 border-blue-500">
+            {scenario.question}
+          </p>
+
+          <div className="relative border-2 border-slate-300 rounded-xl p-4 bg-slate-50 mb-6 shadow-inner min-h-[200px]">
+            <div className="border-b border-slate-200 pb-2 mb-3 flex items-center gap-2 flex-wrap">
+              <div className="w-3 h-3 rounded-full bg-red-400" aria-hidden="true" />
+              <div className="w-3 h-3 rounded-full bg-yellow-400" aria-hidden="true" />
+              <div className="w-3 h-3 rounded-full bg-green-400" aria-hidden="true" />
+              <span className="text-sm font-bold text-slate-500 ml-2">De: {scenario.media.sender}</span>
+            </div>
+
+            <div className="relative text-xl text-slate-800 font-medium p-3 bg-white rounded-lg border border-slate-200 whitespace-pre-line">
+              {scenario.media.content}
+
+              {hasAnswered &&
+                scenario.media.highlights.map((hl) => (
+                  <button
+                    key={hl.id}
+                    type="button"
+                    onClick={() => setActiveHighlight(activeHighlight === hl.id ? null : hl.id)}
+                    style={{
+                      position: 'absolute',
+                      left: `${hl.x}%`,
+                      top: `${hl.y}%`,
+                      width: `${hl.width}%`,
+                      height: `${hl.height}%`
+                    }}
+                    className={`border-4 border-dashed rounded animate-pulse transition-colors cursor-pointer outline-none focus:ring-4 focus:ring-red-200
+                      ${activeHighlight === hl.id ? 'border-red-600 bg-red-100/30' : 'border-red-500 bg-red-50/10'}
+                    `}
+                    aria-label={`Ponto suspeito: ${hl.description}`}
+                  />
+                ))}
+            </div>
           </div>
-          <div className="flex gap-4">
-            {hasSupport && (
-              <>
-                <button 
-                  onClick={replayCurrentAudio}
-                  disabled={!audioEnabled || isSpeaking}
-                  className={`p-3 rounded-full transition active:scale-95 border-2 ${(!audioEnabled || isSpeaking) ? 'opacity-50 cursor-not-allowed bg-slate-800 border-transparent' : 'bg-blue-950 hover:bg-slate-800 border-transparent hover:border-slate-600 focus:outline-none focus:ring-4 focus:ring-blue-400'}`}
-                  title="Ouvir Novamente"
+
+          {!hasAnswered && (
+            <div className="space-y-3">
+              {scenario.options.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => handleOptionClick(opt.id, opt.isScamAction)}
+                  className="w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all text-xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-200"
                 >
-                  <RotateCcw className="w-6 h-6" />
+                  {opt.text}
                 </button>
-                <button 
-                  onClick={toggleAudio}
-                  className="bg-blue-950 p-3 rounded-full hover:bg-slate-800 transition active:scale-95 border-2 border-transparent hover:border-slate-600 focus:outline-none focus:ring-4 focus:ring-blue-400"
-                  title="Ativar/Desativar Áudio"
-                >
-                  {audioEnabled ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6 opacity-50" />}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-        <div className="w-full bg-slate-800 rounded-full h-4 shadow-inner">
-          <div 
-            className="bg-yellow-400 h-4 rounded-full transition-all duration-500 ease-out" 
-            style={{ width: `${((currentScenarioIndex) / SCENARIOS.length) * 100}%` }}
-          ></div>
-        </div>
-      </header>
+              ))}
+            </div>
+          )}
 
-      {/* Main Content */}
-      <main className="flex-1 p-6 flex flex-col gap-6" style={{ paddingBottom: (showFeedbackModal && !isModalMinimized) ? '30vh' : '24px' }}>
-        <div className="flex items-start gap-4">
-          <h2 className="font-bold text-3xl text-slate-800 leading-tight flex-1">{scenario.title}</h2>
-        </div>
-        
-        <p className="text-2xl text-slate-700 leading-snug font-medium border-l-8 border-yellow-400 pl-5">
-           {!isModalMinimized ? scenario.question : "Toque nos itens destacados de vermelho abaixo para entender o perigo."}
-        </p>
-
-        <SuspiciousHighlighter 
-          type={scenario.media.type}
-          sender={scenario.media.sender}
-          content={scenario.media.content}
-          highlights={scenario.media.highlights}
-          showHighlights={showFeedbackModal && localChoice === true} 
-        />
-
-        {/* Options */}
-        <AnimatePresence mode="popLayout">
-          {!showFeedbackModal ? (
-            <motion.div 
-              key="options"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col gap-5 mt-4"
-            >
-              {scenario.options.map((opt, i) => {
-                // Apply danger warning visual cues if the action is scam
-                const isDanger = opt.text.toLowerCase().includes('pagar') || opt.text.toLowerCase().includes('clicar') || opt.text.toLowerCase().includes('baixar');
-                
-                return (
-                  <motion.div
-                    key={opt.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.15 }}
-                  >
-                    <AgeFriendlyButton 
-                      variant={isDanger ? "warning" : "outline"}
-                      onClick={() => handleOptionClick(opt.isScamAction)}
-                    >
-                      {opt.text}
-                    </AgeFriendlyButton>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          ) : isModalMinimized ? (
-            <motion.div
-              key="minimized-actions"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col gap-4 mt-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl"
-            >
-              <p className="text-red-900 font-bold text-lg text-center">
-                Analise a imagem acima.
-              </p>
-              <div className="flex gap-3 flex-col mt-2">
-                 <button onClick={() => setIsModalMinimized(false)} className="text-slate-700 font-bold underline py-2 flex-1 text-lg">
-                   Ver Lição Novamente
-                 </button>
-                 <AgeFriendlyButton onClick={handleNextScreen} variant="primary">
-                   Entendi, Continuar
-                 </AgeFriendlyButton>
+          {hasAnswered && chosenOption && (
+            <div className="mt-6 border-t border-slate-200 pt-6">
+              <div
+                className={`p-4 rounded-xl border-2 flex items-start gap-4 mb-6
+                ${chosenOption.isScamAction ? 'bg-red-50 border-red-300 text-red-900' : 'bg-green-50 border-green-300 text-green-900'}
+              `}
+              >
+                <div className="mt-1">
+                  {chosenOption.isScamAction ? (
+                    <ShieldAlertIcon className="w-8 h-8 text-red-600 flex-shrink-0" />
+                  ) : (
+                    <ShieldCheckIcon className="w-8 h-8 text-green-600 flex-shrink-0" />
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-xl font-extrabold mb-1">
+                    {chosenOption.isScamAction ? 'Você caiu na armadilha!' : 'Você se protegeu bem!'}
+                  </h4>
+                  <p className="text-lg font-medium">
+                    {chosenOption.isScamAction ? scenario.feedback.failText : scenario.feedback.successText}
+                  </p>
+                </div>
               </div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-      </main>
 
-      <LessonModal 
-        isOpen={showFeedbackModal && !isModalMinimized} 
-        isScamAction={localChoice} 
-        scenario={scenario} 
-        onContinue={handleNextScreen} 
-        onMinimize={() => setIsModalMinimized(true)}
-      />
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-6">
+                <h5 className="text-lg font-extrabold text-amber-900 mb-2 font-mono uppercase tracking-wide">
+                  Análise Visual do Golpe
+                </h5>
+                <p className="text-base font-medium text-amber-800 mb-3">
+                  Clique na caixa tracejada em vermelho acima na mensagem para inspecionar os detalhes cruciais usados pelos criminosos.
+                </p>
+
+                {scenario.media.highlights.map((hl) => (
+                  <div
+                    key={hl.id}
+                    className={`p-3 rounded-lg bg-white border border-amber-100 transition-all text-left mt-2
+                      ${activeHighlight === hl.id ? 'ring-2 ring-red-500 border-transparent shadow-sm' : 'opacity-80'}
+                    `}
+                  >
+                    <p className="text-base font-bold text-slate-800">{hl.description}</p>
+                    <p className="text-sm text-slate-600 mt-1">{hl.detailedDescription}</p>
+                    <div className="text-sm font-semibold text-green-700 mt-2 bg-green-50 p-2 rounded border border-green-100">
+                      Dica de Proteção: {hl.preventionTip}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-end">
+                <AgeFriendlyButton onClick={handleNext} variant="primary" className="flex items-center gap-2 px-8">
+                  <span>Avançar</span>
+                  <ArrowRightIcon className="w-6 h-6" />
+                </AgeFriendlyButton>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

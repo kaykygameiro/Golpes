@@ -1,11 +1,14 @@
 import { useState, useCallback } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { SCENARIOS } from '../data/scenarios';
+import { MODULES } from '../data/scenarios';
 import { useSpeechAudio } from './useSpeechAudio';
 
 export function useSimulation() {
-  const { currentScenarioIndex, answerScenario, currentView, score } = useAppStore();
-  const scenario = SCENARIOS[currentScenarioIndex];
+  const { currentModuleId, currentScenarioIndex, answerScenario, currentView, score } = useAppStore();
+  const module = MODULES.find((m) => m.id === currentModuleId) ?? MODULES[0] ?? null;
+  const safeIndex = module ? Math.max(0, Math.min(currentScenarioIndex, module.scenarios.length - 1)) : 0;
+  const scenario = module?.scenarios[safeIndex] ?? null;
+  const isLastScenarioOfModule = module ? safeIndex === module.scenarios.length - 1 : true;
   
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [localChoice, setLocalChoice] = useState<boolean | null>(null);
@@ -24,19 +27,19 @@ export function useSimulation() {
       navigator.vibrate([100]); // Success pattern
     }
 
-    if (audioEnabled) {
-      speak(isScamAction ? scenario.feedback.failAudio : scenario.feedback.successAudio);
+    if (audioEnabled && scenario) {
+      speak(isScamAction ? scenario.feedback.failText : scenario.feedback.successText);
     }
   }, [scenario, stop, speak, audioEnabled]);
 
   const handleNextScreen = useCallback(() => {
     if (localChoice === null) return;
-    const isLast = currentScenarioIndex === SCENARIOS.length - 1;
-    answerScenario(scenario.id, localChoice, isLast);
+    if (!scenario) return;
+    answerScenario(scenario.id, !localChoice);
     setLocalChoice(null);
     setShowFeedbackModal(false);
     stop();
-  }, [localChoice, currentScenarioIndex, answerScenario, scenario.id, stop]);
+  }, [localChoice, answerScenario, scenario, stop]);
 
   const toggleAudio = () => {
     setAudioEnabled(!audioEnabled);
@@ -47,11 +50,12 @@ export function useSimulation() {
     stop();
     if (audioEnabled) {
       setTimeout(() => {
+        if (!scenario) return;
         if (showFeedbackModal && localChoice !== null) {
-          speak(localChoice ? scenario.feedback.failAudio : scenario.feedback.successAudio);
-        } else {
-          speak(scenario.introAudioText);
+          speak(localChoice ? scenario.feedback.failText : scenario.feedback.successText);
+          return;
         }
+        speak(scenario.introAudioText);
       }, 50);
     }
   };
@@ -61,6 +65,7 @@ export function useSimulation() {
     score,
     currentView,
     currentScenarioIndex,
+    isLastScenarioOfModule,
     showFeedbackModal,
     localChoice,
     audioEnabled,

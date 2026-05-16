@@ -1,6 +1,60 @@
 import React, { useState } from 'react';
 import { Highlight } from '../../data/scenarios';
-import { Info, ShieldCheck, X } from 'lucide-react';
+
+function InfoIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  );
+}
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M18 6L6 18" />
+      <path d="M6 6l12 12" />
+    </svg>
+  );
+}
+
+function ShieldCheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 2l8 4v6c0 5-3.5 9.4-8 10-4.5-.6-8-5-8-10V6l8-4z" />
+      <path d="M9 12l2 2 4-5" />
+    </svg>
+  );
+}
 
 interface Props {
   content: string;
@@ -51,7 +105,7 @@ export function SuspiciousHighlighter({ content, sender, type, highlights, showH
             
             {/* Click affordance */}
             <div className={`absolute -right-3 -top-3 bg-red-600 text-white rounded-full p-1 shadow-md z-30 transition-opacity ${activeHighlightId === hl.id ? 'opacity-0' : 'opacity-100'}`}>
-              <Info className="w-4 h-4" />
+              <InfoIcon className="w-4 h-4" />
             </div>
           </div>
         ))}
@@ -66,13 +120,13 @@ export function SuspiciousHighlighter({ content, sender, type, highlights, showH
           >
             <div className="bg-red-50 border-b-2 border-red-100 p-4 flex justify-between items-center text-red-800">
               <h4 className="font-bold text-xl flex items-center gap-2">
-                <Info className="w-6 h-6" /> Análise do Golpe
+                <InfoIcon className="w-6 h-6" /> Análise do Golpe
               </h4>
               <button 
                 onClick={() => setActiveHighlightId(null)}
                 className="p-2 hover:bg-red-100 rounded-full transition-colors active:scale-95"
               >
-                <X className="w-6 h-6" />
+                <XIcon className="w-6 h-6" />
               </button>
             </div>
             <div className="p-6 space-y-6">
@@ -90,7 +144,7 @@ export function SuspiciousHighlighter({ content, sender, type, highlights, showH
               {activeHighlight.preventionTip && (
                 <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded-xl">
                   <h5 className="font-bold text-blue-800 text-lg flex items-center gap-2 mb-2">
-                    <ShieldCheck className="w-5 h-5" /> Como se Proteger:
+                    <ShieldCheckIcon className="w-5 h-5" /> Como se Proteger:
                   </h5>
                   <p className="text-blue-900 font-medium">
                     {activeHighlight.preventionTip}

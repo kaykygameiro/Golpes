@@ -1,74 +1,71 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type GameState = 'home' | 'simulation' | 'post-scam' | 'dashboard';
+export type GameState = 'dashboard' | 'simulation';
 
 export interface AppState {
   currentView: GameState;
   score: number;
+  currentModuleId: string | null;
   currentScenarioIndex: number;
-  completedScenarios: string[]; // IDs of completed scenarios
-  lastAnswerWasScam: boolean; // did the user fall for the scam?
-  
-  // Actions
-  startGame: () => void;
+  completedScenarios: string[];
+
   goToDashboard: () => void;
-  goHome: () => void;
-  answerScenario: (scenarioId: string, isScamAction: boolean, isLastLevel: boolean) => void;
-  nextScenario: () => void;
-  selectScenario: (index: number) => void;
+  selectModule: (moduleId: string) => void;
+  selectScenario: (moduleId: string, index: number) => void;
+  answerScenario: (scenarioId: string, isCorrect: boolean) => void;
   resetProgress: () => void;
 }
 
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      currentView: 'home',
+      currentView: 'dashboard',
       score: 0,
+      currentModuleId: null,
       currentScenarioIndex: 0,
       completedScenarios: [],
-      lastAnswerWasScam: false,
-      
-      startGame: () => set({ currentView: 'simulation', currentScenarioIndex: 0 }),
-      goToDashboard: () => set({ currentView: 'dashboard' }),
-      goHome: () => set({ currentView: 'home' }),
-      
-      answerScenario: (scenarioId, isScamAction, isLastLevel) => set((state) => {
-        const newScore = isScamAction ? state.score : state.score + 10;
-        const newCompleted = state.completedScenarios.includes(scenarioId) 
-          ? state.completedScenarios 
-          : [...state.completedScenarios, scenarioId];
-          
-        return {
-          score: newScore,
-          completedScenarios: newCompleted,
-          lastAnswerWasScam: isScamAction,
-          currentView: isScamAction ? 'post-scam' : (isLastLevel ? 'dashboard' : 'simulation'),
-        };
-      }),
-      
-      nextScenario: () => set((state) => ({ 
-        currentScenarioIndex: state.currentScenarioIndex + 1,
-        currentView: 'simulation'
-      })),
 
-      selectScenario: (index: number) => set({
-        currentScenarioIndex: index,
-        currentView: 'simulation',
-        lastAnswerWasScam: false
-      }),
-      
-      resetProgress: () => set({
-        score: 0,
-        currentScenarioIndex: 0,
-        completedScenarios: [],
-        currentView: 'home',
-        lastAnswerWasScam: false,
-      })
+      goToDashboard: () => set({ currentView: 'dashboard', currentModuleId: null }),
+
+      selectModule: (moduleId: string) =>
+        set({
+          currentModuleId: moduleId,
+          currentScenarioIndex: 0,
+          currentView: 'simulation'
+        }),
+
+      selectScenario: (moduleId: string, index: number) =>
+        set({
+          currentModuleId: moduleId,
+          currentScenarioIndex: index,
+          currentView: 'simulation'
+        }),
+
+      answerScenario: (scenarioId: string, isCorrect: boolean) =>
+        set((state) => {
+          const newScore = isCorrect ? state.score + 10 : state.score;
+          const newCompleted = state.completedScenarios.includes(scenarioId)
+            ? state.completedScenarios
+            : [...state.completedScenarios, scenarioId];
+          return {
+            score: newScore,
+            completedScenarios: newCompleted
+          };
+        }),
+
+      resetProgress: () =>
+        set({
+          score: 0,
+          currentModuleId: null,
+          currentScenarioIndex: 0,
+          completedScenarios: [],
+          currentView: 'dashboard'
+        })
     }),
     {
       name: 'antigolpe-storage',
-      partialize: (state) => ({ score: state.score, completedScenarios: state.completedScenarios }),
+      partialize: (state) => ({ score: state.score, completedScenarios: state.completedScenarios })
     }
   )
 );
