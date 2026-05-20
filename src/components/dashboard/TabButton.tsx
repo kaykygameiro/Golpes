@@ -16,7 +16,7 @@ export function TabButton({ active, onClick, label, icon, className = '', ...pro
       className={
         'relative flex-1 min-h-[44px] px-4 py-3 rounded-2xl text-sm font-extrabold transition-colors ' +
         'focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:outline-none ' +
-        (active ? 'bg-blue-600 text-white' : 'bg-transparent text-slate-700 hover:bg-white') +
+        (active ? 'bg-blue-600 text-white' : 'bg-transparent text-slate-700 hover:bg-slate-50') +
         (className ? ` ${className}` : '')
       }
       {...props}

@@ -46,6 +46,15 @@ export function ModuleCard({
   const status = isLocked ? 'locked' : isCompleted ? 'done' : completedCount > 0 ? 'progress' : 'progress';
   const statusLabel = isLocked ? 'Bloqueado' : isCompleted ? 'Concluído' : completedCount > 0 ? 'Em progresso' : 'Não iniciado';
 
+  const accentClass = isLocked ? 'bg-slate-300' : isCompleted ? 'bg-green-600' : completedCount > 0 ? 'bg-blue-600' : 'bg-slate-300';
+  const iconBgClass = isLocked
+    ? 'bg-slate-100 border-slate-200'
+    : isCompleted
+      ? 'bg-green-50 border-green-200'
+      : completedCount > 0
+        ? 'bg-blue-50 border-blue-200'
+        : 'bg-slate-100 border-slate-200';
+
   return (
     <button
       onClick={onClick}
@@ -57,10 +66,11 @@ export function ModuleCard({
         (isLocked ? 'opacity-60 cursor-not-allowed' : 'hover:bg-slate-50')
       }
     >
+      <div className={`h-1 w-full ${accentClass}`} aria-hidden="true" />
       <div className="p-5">
         <div className="flex items-start gap-4">
           <div
-            className="shrink-0 h-12 w-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center"
+            className={`shrink-0 h-12 w-12 rounded-2xl border flex items-center justify-center ${iconBgClass}`}
             aria-hidden="true"
           >
             <span className="text-xl">{iconEmoji}</span>

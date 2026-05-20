@@ -176,7 +176,7 @@ export function ProgressDashboard() {
           </section>
         )}
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-2">
+        <div className="bg-slate-100 border border-slate-200 rounded-2xl shadow-sm p-2">
           <div className="grid grid-cols-2 gap-2">
             <TabButton
               active={activeTab === 'modules'}
@@ -195,7 +195,7 @@ export function ProgressDashboard() {
 
         <div className="mt-4">
           {activeTab === 'modules' ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {MODULES.map((mod, index) => {
                 const previousMod = index > 0 ? MODULES[index - 1] : null;
                 const isLocked = previousMod ? !previousMod.scenarios.every((s) => completionByScenarioId.has(s.id)) : false;
