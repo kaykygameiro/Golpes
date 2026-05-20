@@ -31,10 +31,102 @@ function ArrowRightIcon({ className }: { className?: string }) {
   );
 }
 
+function ArrowLeftIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 12H5" />
+      <path d="M11 18l-6-6 6-6" />
+    </svg>
+  );
+}
+
+function ZoomInIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.3-4.3" />
+      <path d="M11 8v6" />
+      <path d="M8 11h6" />
+    </svg>
+  );
+}
+
+function ZoomOutIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.3-4.3" />
+      <path d="M8 11h6" />
+    </svg>
+  );
+}
+
+type ScenarioImageKind = 'base' | 'highlighted';
+
+function getScenarioImageUrl(moduleId: string, scenarioNumber: number, kind: ScenarioImageKind) {
+  const map: Record<string, { base: string[]; highlighted: string[] }> = {
+    'mod-mensagens': {
+      base: [
+        new URL('../../imgs/mod1/scenario1_baseImage.png', import.meta.url).href,
+        new URL('../../imgs/mod1/scenario2_baseImage.png', import.meta.url).href,
+        new URL('../../imgs/mod1/scenario3_baseImage.png', import.meta.url).href,
+        new URL('../../imgs/mod1/scenario4_baseImage.png', import.meta.url).href,
+        new URL('../../imgs/mod1/scenario5_baseImage.png', import.meta.url).href
+      ],
+      highlighted: [
+        new URL('../../imgs/mod1/scenario1_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod1/scenario2_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod1/scenario3_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod1/scenario4_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod1/scenario5_highlightedImage.png', import.meta.url).href
+      ]
+    },
+    'mod-financeiro': {
+      base: [
+        new URL('../../imgs/mod2/scenario1_baseImage.png', import.meta.url).href,
+        new URL('../../imgs/mod2/scenario2_baseImage.png', import.meta.url).href,
+        new URL('../../imgs/mod2/scenario3_baseImage.png', import.meta.url).href,
+        new URL('../../imgs/mod2/scenario4_baseImage.png', import.meta.url).href,
+        new URL('../../imgs/mod2/scenario5_baseImage.png', import.meta.url).href
+      ],
+      highlighted: [
+        new URL('../../imgs/mod2/scenario1_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod2/scenario2_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod2/scenario3_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod2/scenario4_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod2/scenario5_highlightedImage.png', import.meta.url).href
+      ]
+    },
+    'mod-compras': {
+      base: [
+        new URL('../../imgs/mod3/scenario1_baseImage (1).png', import.meta.url).href,
+        new URL('../../imgs/mod3/scenario2_baseImage.png', import.meta.url).href,
+        new URL('../../imgs/mod3/scenario3_baseImage.png', import.meta.url).href,
+        new URL('../../imgs/mod3/scenario4_baseImage.png', import.meta.url).href,
+        new URL('../../imgs/mod3/scenario5_baseImage.png', import.meta.url).href
+      ],
+      highlighted: [
+        new URL('../../imgs/mod3/scenario1_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod3/scenario2_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod3/scenario3_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod3/scenario4_highlightedImage.png', import.meta.url).href,
+        new URL('../../imgs/mod3/scenario5_highlightedImage.png', import.meta.url).href
+      ]
+    }
+  };
+
+  const bucket = map[moduleId];
+  const idx = scenarioNumber - 1;
+  if (!bucket || idx < 0) return null;
+  const arr = kind === 'base' ? bucket.base : bucket.highlighted;
+  return arr[idx] ?? null;
+}
+
 export function ScenarioView() {
   const { currentModuleId, currentScenarioIndex, answerScenario, goToDashboard, selectScenario } = useAppStore();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   const currentModule = useMemo(() => MODULES.find((m) => m.id === currentModuleId) ?? null, [currentModuleId]);
   const scenario = currentModule?.scenarios[currentScenarioIndex] ?? null;
@@ -62,6 +154,7 @@ export function ScenarioView() {
     if (nextIndex < currentModule.scenarios.length) {
       setSelectedOption(null);
       setHasAnswered(false);
+      setIsZoomed(false);
       selectScenario(currentModule.id, nextIndex);
     } else {
       goToDashboard();
@@ -69,96 +162,250 @@ export function ScenarioView() {
   };
 
   const chosenOption = scenario.options.find((o) => o.id === selectedOption) ?? null;
+  const correctOption = scenario.options.find((o) => !o.isScamAction) ?? null;
+  const isCorrect = chosenOption ? !chosenOption.isScamAction : false;
+
+  const scenarioNumber = currentScenarioIndex + 1;
+  const baseImageUrl =
+    (currentModuleId ? getScenarioImageUrl(currentModuleId, scenarioNumber, 'base') : null) ?? scenario.media.baseImage;
+  const highlightedImageUrl =
+    (currentModuleId ? getScenarioImageUrl(currentModuleId, scenarioNumber, 'highlighted') : null) ??
+    scenario.media.highlightedImage;
+
+  const activeImageUrl = hasAnswered ? highlightedImageUrl : baseImageUrl;
+  const imageAlt = hasAnswered
+    ? `Imagem analisada com destaques do cenário: ${scenario.title}`
+    : `Imagem do cenário: ${scenario.title}`;
+
+  const progressPercent = currentModule.scenarios.length > 0 ? Math.round((scenarioNumber / currentModule.scenarios.length) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-6 pb-32 flex flex-col items-center">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-md overflow-hidden border border-slate-200">
-        <div className="bg-blue-600 p-4 text-white flex justify-between items-center gap-4">
-          <span className="text-lg font-bold tracking-wide uppercase truncate" title={currentModule.title}>
-            {currentModule.title}
-          </span>
-          <span className="text-base font-medium whitespace-nowrap">
-            Questão {currentScenarioIndex + 1} de {currentModule.scenarios.length}
-          </span>
-        </div>
+    <div className="min-h-screen bg-slate-100">
+      <div className="sticky top-0 z-20 bg-blue-600 text-white border-b border-blue-700">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={goToDashboard}
+              aria-label="Voltar ao dashboard"
+              className="min-h-[44px] px-3 rounded-2xl hover:bg-white/10 focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:outline-none inline-flex items-center gap-2"
+            >
+              <ArrowLeftIcon className="h-5 w-5" />
+              <span className="text-sm font-extrabold">Voltar</span>
+            </button>
 
-        <div className="p-4 md:p-6">
-          <h2 className="text-2xl font-extrabold text-slate-800 mb-4">{scenario.title}</h2>
-          <p className="text-lg text-slate-600 font-medium mb-6 bg-blue-50 p-4 rounded-xl border-l-4 border-blue-500">
-            {scenario.question}
-          </p>
-
-          <div className="relative border-2 border-slate-300 rounded-xl bg-slate-50 mb-6 shadow-inner overflow-hidden flex justify-center items-center p-2 min-h-[300px]">
-            {/* Renderiza a imagem correspondente ao estado da resposta */}
-            <img 
-              src={hasAnswered ? scenario.media.highlightedImage : scenario.media.baseImage} 
-              alt="Simulação de interface do golpe" 
-              className="max-w-full h-auto rounded shadow-sm"
-              style={{ maxHeight: '600px', objectFit: 'contain' }}
-            />
+            <div className="text-right">
+              <div className="text-xs font-extrabold text-blue-100">{currentModule.title}</div>
+              <div className="text-sm font-extrabold">
+                Questão {scenarioNumber} de {currentModule.scenarios.length}
+              </div>
+            </div>
           </div>
 
-          {!hasAnswered && (
-            <div className="space-y-3">
-              {scenario.options.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => handleOptionClick(opt.id, opt.isScamAction)}
-                  className="w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all text-xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-200"
-                >
-                  {opt.text}
-                </button>
-              ))}
+          <div className="mt-2">
+            <div
+              className="h-2 rounded-full bg-white/20 overflow-hidden"
+              role="progressbar"
+              aria-label="Progresso do módulo"
+              aria-valuenow={scenarioNumber}
+              aria-valuemin={1}
+              aria-valuemax={currentModule.scenarios.length}
+            >
+              <div className="h-full bg-white rounded-full" style={{ width: `${progressPercent}%` }} />
             </div>
-          )}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 py-6 pb-10">
+        <div className="max-w-2xl mx-auto">
+          <section className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-5">
+              <h1 className="text-lg font-extrabold text-slate-900">{scenario.title}</h1>
+              <p className="mt-3 bg-blue-50 border border-blue-200 rounded-2xl p-4 text-slate-900 text-sm font-medium leading-relaxed">
+                {scenario.question}
+              </p>
+
+              <div className="mt-5 flex items-center justify-between gap-3">
+                <div className="text-xs font-extrabold text-slate-500">Análise visual</div>
+                <button
+                  type="button"
+                  onClick={() => setIsZoomed((v) => !v)}
+                  aria-label={isZoomed ? 'Reduzir imagem' : 'Ampliar imagem'}
+                  className="min-h-[44px] px-3 rounded-2xl text-sm font-extrabold text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:outline-none inline-flex items-center gap-2"
+                >
+                  {isZoomed ? <ZoomOutIcon className="h-5 w-5" /> : <ZoomInIcon className="h-5 w-5" />}
+                  <span>{isZoomed ? 'Reduzir' : 'Ampliar'}</span>
+                </button>
+              </div>
+
+              <div
+                className={
+                  'mt-3 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center ' +
+                  (isZoomed ? 'max-h-[600px]' : 'max-h-[360px]')
+                }
+              >
+                <div className="relative w-full flex items-center justify-center">
+                  <img
+                    key={activeImageUrl}
+                    src={activeImageUrl}
+                    alt={imageAlt}
+                    className="w-full h-auto object-contain transition-opacity duration-200"
+                    style={{ maxHeight: isZoomed ? 600 : 360 }}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-4 bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <h2 className="text-base font-extrabold text-slate-900">O que você faz agora?</h2>
+            <p className="mt-1 text-sm font-medium text-slate-700">Escolha a opção mais segura.</p>
+
+            <div className="mt-4 space-y-3">
+              {scenario.options.map((opt) => {
+                const isSelected = opt.id === selectedOption;
+                const isOptionCorrect = !opt.isScamAction;
+                const showState = hasAnswered;
+
+                const stateClasses = !showState
+                  ? 'border-slate-200 bg-white hover:bg-slate-50 hover:border-blue-300'
+                  : isOptionCorrect
+                    ? 'border-green-300 bg-green-50'
+                    : isSelected
+                      ? 'border-red-300 bg-red-50'
+                      : 'border-slate-200 bg-white opacity-80';
+
+                const stateLabel = !showState
+                  ? ''
+                  : isOptionCorrect
+                    ? ' (Resposta correta)'
+                    : isSelected
+                      ? ' (Sua escolha)'
+                      : '';
+
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => handleOptionClick(opt.id, opt.isScamAction)}
+                    disabled={hasAnswered}
+                    aria-label={`Escolher opção: ${opt.text}${stateLabel}`}
+                    className={
+                      'w-full text-left rounded-2xl border px-4 py-3 min-h-[44px] transition-colors ' +
+                      'focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:outline-none ' +
+                      stateClasses
+                    }
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="text-sm font-extrabold text-slate-900 leading-snug">{opt.text}</div>
+                      {hasAnswered && (
+                        <div className="shrink-0 mt-0.5" aria-hidden="true">
+                          {isOptionCorrect ? (
+                            <ShieldCheckIcon className="h-5 w-5 text-green-600" />
+                          ) : isSelected ? (
+                            <ShieldAlertIcon className="h-5 w-5 text-red-600" />
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
           {hasAnswered && chosenOption && (
-            <div className="mt-6 border-t border-slate-200 pt-6">
-              <div className={`p-4 rounded-xl border-2 flex items-start gap-4 mb-6 ${chosenOption.isScamAction ? 'bg-red-50 border-red-300 text-red-900' : 'bg-green-50 border-green-300 text-green-900'}`}>
-                <div className="mt-1">
-                  {chosenOption.isScamAction ? (
-                    <ShieldAlertIcon className="w-8 h-8 text-red-600 flex-shrink-0" />
-                  ) : (
-                    <ShieldCheckIcon className="w-8 h-8 text-green-600 flex-shrink-0" />
-                  )}
+            <section className="mt-4">
+              <div className="grid gap-4">
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+                  <h3 className="text-base font-extrabold text-slate-900">Resultado</h3>
+                  <div className="mt-3 grid gap-3">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="text-xs font-extrabold text-slate-600">Sua escolha</div>
+                      <div className="mt-1 text-sm font-extrabold text-slate-900">{chosenOption.text}</div>
+                    </div>
+                    {correctOption && (
+                      <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
+                        <div className="text-xs font-extrabold text-green-700">Resposta correta</div>
+                        <div className="mt-1 text-sm font-extrabold text-slate-900">{correctOption.text}</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-xl font-extrabold mb-1">
-                    {chosenOption.isScamAction ? 'Você caiu na armadilha!' : 'Você se protegeu bem!'}
-                  </h4>
-                  <p className="text-lg font-medium">
-                    {chosenOption.isScamAction ? scenario.feedback.failText : scenario.feedback.successText}
-                  </p>
-                </div>
-              </div>
 
-              <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-6">
-                <h5 className="text-lg font-extrabold text-amber-900 mb-2 font-mono uppercase tracking-wide">
-                  Análise Visual do Golpe
-                </h5>
-                <p className="text-base font-medium text-amber-800 mb-3">
-                  A imagem acima foi atualizada com marcações em vermelho para apontar as fraudes na mensagem. Leia os detalhes abaixo:
-                </p>
-
-                {scenario.media.highlights.map((hl) => (
-                  <div key={hl.id} className="p-3 rounded-lg bg-white border border-amber-100 transition-all text-left mt-2 shadow-sm">
-                    <p className="text-base font-bold text-slate-800">{hl.description}</p>
-                    <p className="text-sm text-slate-600 mt-1">{hl.detailedDescription}</p>
-                    <div className="text-sm font-semibold text-green-700 mt-2 bg-green-50 p-2 rounded border border-green-100">
-                      Dica de Proteção: {hl.preventionTip}
+                <div
+                  className={
+                    'rounded-2xl border shadow-sm p-5 ' +
+                    (isCorrect ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300')
+                  }
+                  aria-label={isCorrect ? 'Veredito: acerto' : 'Veredito: erro'}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5" aria-hidden="true">
+                      {isCorrect ? (
+                        <ShieldCheckIcon className="h-6 w-6 text-green-600" />
+                      ) : (
+                        <ShieldAlertIcon className="h-6 w-6 text-red-600" />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className={`text-base font-extrabold ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                        {isCorrect ? 'Você se protegeu bem' : 'Você caiu na armadilha'}
+                      </h3>
+                      <p className="mt-2 text-sm font-medium text-slate-900 leading-relaxed">
+                        {isCorrect ? scenario.feedback.successText : scenario.feedback.failText}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
 
-              <div className="flex justify-end">
-                <AgeFriendlyButton onClick={handleNext} variant="primary" className="flex items-center gap-2 px-8">
-                  <span>Avançar</span>
-                  <ArrowRightIcon className="w-6 h-6" />
-                </AgeFriendlyButton>
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl shadow-sm p-5">
+                  <h3 className="text-base font-extrabold text-amber-900">Análise técnica</h3>
+                  <p className="mt-1 text-sm font-medium text-amber-800">
+                    Veja os sinais identificados na imagem (marcados após a resposta).
+                  </p>
+
+                  <div className="mt-4 space-y-3">
+                    {scenario.media.highlights.map((hl, idx) => (
+                      <div key={hl.id} className="bg-white border border-amber-200 rounded-2xl p-4">
+                        <div className="flex items-start gap-3">
+                          <div
+                            className="shrink-0 h-8 w-8 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-900 font-extrabold"
+                            aria-hidden="true"
+                          >
+                            {idx + 1}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-sm font-extrabold text-slate-900">{hl.description}</div>
+                            <div className="mt-2 text-sm font-medium text-slate-700 leading-relaxed">
+                              {hl.detailedDescription}
+                            </div>
+                            <div className="mt-3 rounded-2xl bg-green-50 border border-green-200 p-3">
+                              <div className="text-xs font-extrabold text-green-700">Dica de prevenção</div>
+                              <div className="mt-1 text-sm font-medium text-slate-900">{hl.preventionTip}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <AgeFriendlyButton
+                    onClick={handleNext}
+                    variant="primary"
+                    size="md"
+                    rightIcon={<ArrowRightIcon className="h-5 w-5" />}
+                    aria-label="Avançar para a próxima questão"
+                    className="max-w-[220px]"
+                  >
+                    Avançar
+                  </AgeFriendlyButton>
+                </div>
               </div>
-            </div>
+            </section>
           )}
         </div>
       </div>

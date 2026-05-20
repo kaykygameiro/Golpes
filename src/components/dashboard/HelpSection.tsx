@@ -1,42 +1,6 @@
-import React from 'react';
+import React, { useId, useMemo, useState } from 'react';
 
-function Icon({ type, className }: { type: 'alert' | 'info' | 'phone'; className?: string }) {
-  if (type === 'alert') {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-        className={className}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M10.3 4.2l-7.7 13.3A2 2 0 004.3 20h15.4a2 2 0 001.7-2.5L13.7 4.2a2 2 0 00-3.4 0z" />
-        <path d="M12 9v4" />
-        <path d="M12 17h.01" />
-      </svg>
-    );
-  }
-
-  if (type === 'phone') {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-        className={className}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M22 16.9v3a2 2 0 01-2.2 2c-9.2-.8-16.5-8.1-17.3-17.3A2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.5 2.1L8.9 9.1a16 16 0 006 6l.7-.9a2 2 0 012.1-.5c.8.3 1.7.5 2.6.6a2 2 0 011.7 2z" />
-      </svg>
-    );
-  }
-
+function ChevronDown({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -48,48 +12,143 @@ function Icon({ type, className }: { type: 'alert' | 'info' | 'phone'; className
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4" />
-      <path d="M12 8h.01" />
+      <path d="M6 9l6 6 6-6" />
     </svg>
   );
 }
 
 export function HelpSection() {
-  const faqs = [
-    {
-      title: 'Como identificar um golpe?',
-      content: 'Fique atento a mensagens urgentes pedindo dinheiro, links desconhecidos por SMS ou e-mail, e promessas de dinheiro fácil online. Sempre desconfie e nunca passe senhas.',
-      icon: <Icon type="alert" className="w-6 h-6 text-yellow-500" />
-    },
-    {
-      title: 'O que fazer se eu cair num golpe?',
-      content: 'Mantenha a calma. Avise seu banco imediatamente pelo número oficial no verso do cartão. Mude suas senhas. Faça um Boletim de Ocorrência na polícia.',
-      icon: <Icon type="info" className="w-6 h-6 text-blue-500" />
-    },
-    {
-      title: 'Contatos Úteis',
-      content: 'Procon: Ligue 151.\nPolícia Militar: Ligue 190.\nDisque Denúncia: Ligue 181.',
-      icon: <Icon type="phone" className="w-6 h-6 text-green-500" />
-    }
-  ];
+  const baseId = useId();
+  const [openId, setOpenId] = useState<string | null>('identify');
+
+  const items = useMemo(
+    () => [
+      {
+        id: 'identify',
+        title: 'Como identificar um golpe?',
+        content:
+          'Desconfie de urgência ("agora"/"última chance"), pedidos de dinheiro, links encurtados e promessas fáceis.\n' +
+          'Nunca compartilhe códigos de verificação ou senhas. Confirme sempre por um canal oficial.'
+      },
+      {
+        id: 'what-to-do',
+        title: 'O que fazer se eu cair num golpe?',
+        content:
+          'Entre em contato com o banco pelos canais oficiais, altere suas senhas e registre um boletim de ocorrência.\n' +
+          'Se houver risco imediato, procure ajuda pelo telefone de emergência.'
+      },
+      {
+        id: 'tips',
+        title: 'Dicas rápidas de segurança',
+        content:
+          'Confira a URL completa no navegador, evite clicar em links recebidos por mensagem e valide a identidade da pessoa por ligação.\n' +
+          'Quando tiver dúvida, pare e verifique: a pressa é o melhor amigo do golpista.'
+      }
+    ],
+    []
+  );
+
+  const toggle = (id: string) => setOpenId((prev) => (prev === id ? null : id));
 
   return (
     <div className="space-y-4">
-      {faqs.map((faq, index) => (
-        <div
-          key={index}
-          className="bg-white p-5 rounded-xl border-2 border-slate-100 shadow-sm"
-        >
-          <div className="flex items-center gap-3 mb-3">
-            {faq.icon}
-            <h3 className="text-xl font-bold text-slate-800">{faq.title}</h3>
-          </div>
-          <p className="text-lg text-slate-600 leading-relaxed font-medium whitespace-pre-line">
-            {faq.content}
+      <section className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <header className="px-5 pt-5">
+          <h2 className="text-lg font-extrabold text-slate-900">Ajuda</h2>
+          <p className="mt-1 text-sm font-medium text-slate-700">
+            Abra os itens abaixo e use os contatos de emergência quando necessário.
           </p>
+        </header>
+
+        <div className="px-2 pb-2 pt-3">
+          {items.map((item) => {
+            const isOpen = openId === item.id;
+            const buttonId = `${baseId}-${item.id}-button`;
+            const panelId = `${baseId}-${item.id}-panel`;
+            return (
+              <div key={item.id} className="px-3">
+                <button
+                  id={buttonId}
+                  type="button"
+                  onClick={() => toggle(item.id)}
+                  aria-expanded={isOpen}
+                  aria-controls={panelId}
+                  className={
+                    'w-full min-h-[44px] py-3 px-3 rounded-2xl flex items-center justify-between gap-3 ' +
+                    'focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:outline-none ' +
+                    (isOpen ? 'bg-slate-50' : 'hover:bg-slate-50')
+                  }
+                >
+                  <span className="text-left text-sm font-extrabold text-slate-900">{item.title}</span>
+                  <ChevronDown
+                    className={`h-5 w-5 text-slate-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                <div
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={buttonId}
+                  className={
+                    'grid transition-[grid-template-rows,opacity] duration-200 ease-out ' +
+                    (isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0')
+                  }
+                >
+                  <div className="overflow-hidden">
+                    <div className="px-4 pb-4 pt-2 text-sm text-slate-700 font-medium whitespace-pre-line">
+                      {item.content}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="h-px bg-slate-200 my-2" aria-hidden="true" />
+              </div>
+            );
+          })}
         </div>
-      ))}
+      </section>
+
+      <section className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+        <h3 className="text-base font-extrabold text-slate-900">Contatos de emergência</h3>
+        <p className="mt-1 text-sm font-medium text-slate-700">
+          Toque para ligar (use apenas em caso real).
+        </p>
+
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <a
+            href="tel:151"
+            aria-label="Ligar para o Procon 151"
+            className="min-h-[44px] rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:outline-none px-4 py-3"
+          >
+            <div className="text-xs font-extrabold text-slate-600">PROCON</div>
+            <div className="text-lg font-extrabold text-slate-900">151</div>
+          </a>
+          <a
+            href="tel:190"
+            aria-label="Ligar para a Polícia Militar 190"
+            className="min-h-[44px] rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:outline-none px-4 py-3"
+          >
+            <div className="text-xs font-extrabold text-slate-600">POLÍCIA MILITAR</div>
+            <div className="text-lg font-extrabold text-slate-900">190</div>
+          </a>
+          <a
+            href="tel:181"
+            aria-label="Ligar para o Disque Denúncia 181"
+            className="min-h-[44px] rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:outline-none px-4 py-3"
+          >
+            <div className="text-xs font-extrabold text-slate-600">DISQUE DENÚNCIA</div>
+            <div className="text-lg font-extrabold text-slate-900">181</div>
+          </a>
+          <a
+            href="tel:197"
+            aria-label="Ligar para a Polícia Civil 197"
+            className="min-h-[44px] rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 focus-visible:ring-4 focus-visible:ring-blue-300 focus-visible:outline-none px-4 py-3"
+          >
+            <div className="text-xs font-extrabold text-slate-600">POLÍCIA CIVIL</div>
+            <div className="text-lg font-extrabold text-slate-900">197</div>
+          </a>
+        </div>
+      </section>
     </div>
   );
 }
