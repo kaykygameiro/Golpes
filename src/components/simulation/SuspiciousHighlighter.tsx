@@ -83,33 +83,25 @@ export function SuspiciousHighlighter({ content, sender, type, highlights, showH
       
       <div className="relative bg-white p-5 rounded-2xl rounded-tl-none shadow-sm text-xl text-slate-800 leading-relaxed max-w-[90%] inline-block">
         <p className="relative z-10">{content}</p>
-        
-        {showHighlights && highlights && highlights.map(hl => (
-          <div 
-            key={hl.id} 
-            onClick={() => setActiveHighlightId(hl.id)}
-            className={`absolute border-4 rounded-lg z-20 cursor-pointer transition-colors ${activeHighlightId === hl.id ? 'border-red-700 bg-red-100/30' : 'border-red-500 hover:border-red-600'} animate-pulse`}
-            style={{
-              top: `${hl.y}%`,
-              left: `${hl.x}%`,
-              width: `${hl.width}%`,
-              height: `${hl.height}%`,
-            }}
-          >
-            {activeHighlightId !== hl.id && (
-              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-red-600 text-white text-base font-bold px-3 py-2 rounded shadow-lg w-max max-w-[200px] text-center leading-tight pointer-events-none">
-                {hl.description}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-red-600 pointer-events-none"></div>
-              </div>
-            )}
-            
-            {/* Click affordance */}
-            <div className={`absolute -right-3 -top-3 bg-red-600 text-white rounded-full p-1 shadow-md z-30 transition-opacity ${activeHighlightId === hl.id ? 'opacity-0' : 'opacity-100'}`}>
-              <InfoIcon className="w-4 h-4" />
-            </div>
-          </div>
-        ))}
       </div>
+
+      {showHighlights && highlights && highlights.length > 0 && (
+        <div className="mt-4 space-y-3">
+          {highlights.map((hl) => (
+            <button
+              key={hl.id}
+              type="button"
+              onClick={() => setActiveHighlightId(hl.id)}
+              className="w-full text-left bg-red-50 hover:bg-red-100 border-2 border-red-200 rounded-xl p-4 transition-colors active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-2 text-red-800 font-bold">
+                <InfoIcon className="w-5 h-5" />
+                <span>Analisar: {hl.description}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Detailed Highlight Modal overlay */}
       {activeHighlight && (

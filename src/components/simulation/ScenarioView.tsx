@@ -5,16 +5,7 @@ import { AgeFriendlyButton } from '../ui/AgeFriendlyButton';
 
 function ShieldCheckIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z" />
       <path d="M9 12l2 2 4-4" />
     </svg>
@@ -23,16 +14,7 @@ function ShieldCheckIcon({ className }: { className?: string }) {
 
 function ShieldAlertIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z" />
       <path d="M12 8v5" />
       <path d="M12 16h.01" />
@@ -42,16 +24,7 @@ function ShieldAlertIcon({ className }: { className?: string }) {
 
 function ArrowRightIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M5 12h14" />
       <path d="M13 6l6 6-6 6" />
     </svg>
@@ -62,7 +35,6 @@ export function ScenarioView() {
   const { currentModuleId, currentScenarioIndex, answerScenario, goToDashboard, selectScenario } = useAppStore();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
-  const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
 
   const currentModule = useMemo(() => MODULES.find((m) => m.id === currentModuleId) ?? null, [currentModuleId]);
   const scenario = currentModule?.scenarios[currentScenarioIndex] ?? null;
@@ -90,7 +62,6 @@ export function ScenarioView() {
     if (nextIndex < currentModule.scenarios.length) {
       setSelectedOption(null);
       setHasAnswered(false);
-      setActiveHighlight(null);
       selectScenario(currentModule.id, nextIndex);
     } else {
       goToDashboard();
@@ -117,37 +88,14 @@ export function ScenarioView() {
             {scenario.question}
           </p>
 
-          <div className="relative border-2 border-slate-300 rounded-xl p-4 bg-slate-50 mb-6 shadow-inner min-h-[200px]">
-            <div className="border-b border-slate-200 pb-2 mb-3 flex items-center gap-2 flex-wrap">
-              <div className="w-3 h-3 rounded-full bg-red-400" aria-hidden="true" />
-              <div className="w-3 h-3 rounded-full bg-yellow-400" aria-hidden="true" />
-              <div className="w-3 h-3 rounded-full bg-green-400" aria-hidden="true" />
-              <span className="text-sm font-bold text-slate-500 ml-2">De: {scenario.media.sender}</span>
-            </div>
-
-            <div className="relative text-xl text-slate-800 font-medium p-3 bg-white rounded-lg border border-slate-200 whitespace-pre-line">
-              {scenario.media.content}
-
-              {hasAnswered &&
-                scenario.media.highlights.map((hl) => (
-                  <button
-                    key={hl.id}
-                    type="button"
-                    onClick={() => setActiveHighlight(activeHighlight === hl.id ? null : hl.id)}
-                    style={{
-                      position: 'absolute',
-                      left: `${hl.x}%`,
-                      top: `${hl.y}%`,
-                      width: `${hl.width}%`,
-                      height: `${hl.height}%`
-                    }}
-                    className={`border-4 border-dashed rounded animate-pulse transition-colors cursor-pointer outline-none focus:ring-4 focus:ring-red-200
-                      ${activeHighlight === hl.id ? 'border-red-600 bg-red-100/30' : 'border-red-500 bg-red-50/10'}
-                    `}
-                    aria-label={`Ponto suspeito: ${hl.description}`}
-                  />
-                ))}
-            </div>
+          <div className="relative border-2 border-slate-300 rounded-xl bg-slate-50 mb-6 shadow-inner overflow-hidden flex justify-center items-center p-2 min-h-[300px]">
+            {/* Renderiza a imagem correspondente ao estado da resposta */}
+            <img 
+              src={hasAnswered ? scenario.media.highlightedImage : scenario.media.baseImage} 
+              alt="Simulação de interface do golpe" 
+              className="max-w-full h-auto rounded shadow-sm"
+              style={{ maxHeight: '600px', objectFit: 'contain' }}
+            />
           </div>
 
           {!hasAnswered && (
@@ -167,11 +115,7 @@ export function ScenarioView() {
 
           {hasAnswered && chosenOption && (
             <div className="mt-6 border-t border-slate-200 pt-6">
-              <div
-                className={`p-4 rounded-xl border-2 flex items-start gap-4 mb-6
-                ${chosenOption.isScamAction ? 'bg-red-50 border-red-300 text-red-900' : 'bg-green-50 border-green-300 text-green-900'}
-              `}
-              >
+              <div className={`p-4 rounded-xl border-2 flex items-start gap-4 mb-6 ${chosenOption.isScamAction ? 'bg-red-50 border-red-300 text-red-900' : 'bg-green-50 border-green-300 text-green-900'}`}>
                 <div className="mt-1">
                   {chosenOption.isScamAction ? (
                     <ShieldAlertIcon className="w-8 h-8 text-red-600 flex-shrink-0" />
@@ -194,16 +138,11 @@ export function ScenarioView() {
                   Análise Visual do Golpe
                 </h5>
                 <p className="text-base font-medium text-amber-800 mb-3">
-                  Clique na caixa tracejada em vermelho acima na mensagem para inspecionar os detalhes cruciais usados pelos criminosos.
+                  A imagem acima foi atualizada com marcações em vermelho para apontar as fraudes na mensagem. Leia os detalhes abaixo:
                 </p>
 
                 {scenario.media.highlights.map((hl) => (
-                  <div
-                    key={hl.id}
-                    className={`p-3 rounded-lg bg-white border border-amber-100 transition-all text-left mt-2
-                      ${activeHighlight === hl.id ? 'ring-2 ring-red-500 border-transparent shadow-sm' : 'opacity-80'}
-                    `}
-                  >
+                  <div key={hl.id} className="p-3 rounded-lg bg-white border border-amber-100 transition-all text-left mt-2 shadow-sm">
                     <p className="text-base font-bold text-slate-800">{hl.description}</p>
                     <p className="text-sm text-slate-600 mt-1">{hl.detailedDescription}</p>
                     <div className="text-sm font-semibold text-green-700 mt-2 bg-green-50 p-2 rounded border border-green-100">
